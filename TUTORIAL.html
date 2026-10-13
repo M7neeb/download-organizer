@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build the Download Organizer — a beginner&#x27;s guide</title>
+<style>
+:root{
+  --bg:#0f1117; --card:#171a23; --line:#2b3242; --text:#e7ebf3;
+  --muted:#98a2b8; --accent:#4f8cff; --ok:#3ecf8e; --warn:#f0b45a;
+  --danger:#ff6b6b; --code:#12151d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.72 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.layout{display:flex;align-items:flex-start}
+nav.toc{position:sticky;top:0;height:100vh;overflow-y:auto;flex:0 0 310px;
+  padding:22px 14px 40px 22px;border-right:1px solid var(--line);font-size:14px}
+nav.toc h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 12px 8px}
+nav.toc a{display:block;color:var(--muted);text-decoration:none;
+  padding:4px 10px;border-radius:7px;margin:1px 0;line-height:1.45}
+nav.toc a:hover{background:var(--card);color:var(--text)}
+nav.toc a.lvl1{color:#cdd7ea;font-weight:600;margin-top:12px}
+nav.toc a.active{background:var(--accent);color:#fff}
+nav.toc a.active.lvl1{background:var(--accent)}
+main{flex:1 1 auto;min-width:0;max-width:940px;padding:34px 46px 140px;
+  margin:0 auto}
+article h1{font-size:2em;line-height:1.25;margin:1.7em 0 .7em;padding-bottom:.32em;
+  border-bottom:2px solid var(--line)}
+article h1:first-child{margin-top:.2em}
+article h2{font-size:1.4em;line-height:1.3;margin:1.9em 0 .55em;color:#d3dcee}
+article h3{font-size:1.13em;margin:1.5em 0 .4em;color:#c3cee4}
+article h4{font-size:1em;margin:1.3em 0 .3em;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.05em}
+h1,h2,h3,h4{scroll-margin-top:24px}
+a{color:var(--accent)}
+a.anchor{opacity:0;margin-left:.4em;font-size:.75em;text-decoration:none;
+  color:var(--muted)}
+h1:hover a.anchor,h2:hover a.anchor,h3:hover a.anchor{opacity:1}
+p{margin:.85em 0}
+ul,ol{padding-left:1.7em;margin:.85em 0}
+li{margin:.3em 0}
+li>ul,li>ol{margin:.25em 0}
+strong{color:#fff}
+:not(pre)>code{background:var(--card);border:1px solid var(--line);
+  padding:1.5px 6px;border-radius:5px;color:#ffd08a;
+  font-family:Consolas,"Cascadia Mono",monospace;font-size:.87em}
+hr{border:0;border-top:1px solid var(--line);margin:2.6em 0}
+blockquote{margin:1.3em 0;padding:14px 18px;background:var(--card);
+  border-left:3px solid var(--warn);border-radius:0 10px 10px 0;color:#dbe2f0}
+blockquote p:first-child{margin-top:0}
+blockquote p:last-child{margin-bottom:0}
+table{border-collapse:collapse;width:100%;margin:1.3em 0;font-size:14.5px;
+  display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:8px 13px;text-align:left;
+  vertical-align:top}
+th{background:var(--card);color:#fff;font-weight:600}
+tbody tr:nth-child(even){background:rgba(255,255,255,.018)}
+/* code blocks */
+.cb{border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  margin:1.2em 0;background:var(--code)}
+.cb-head{display:flex;justify-content:space-between;align-items:center;
+  padding:6px 10px 6px 14px;background:var(--card);
+  border-bottom:1px solid var(--line)}
+.cb-lang{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-family:Consolas,monospace}
+.cb-copy{background:transparent;border:1px solid var(--line);color:var(--muted);
+  border-radius:6px;font-size:11.5px;padding:3px 10px;cursor:pointer;
+  font-family:inherit}
+.cb-copy:hover{color:var(--text);border-color:var(--muted)}
+.cb pre{margin:0;padding:14px 16px;overflow-x:auto}
+.cb pre code{font-family:Consolas,"Cascadia Mono",monospace;font-size:13.5px;
+  line-height:1.6;background:none;border:0;padding:0;color:var(--text)}
+footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:13px}
+#menu{display:none;position:fixed;right:16px;bottom:16px;z-index:20;
+  background:var(--accent);color:#fff;border:0;border-radius:24px;
+  padding:11px 18px;font:600 14px inherit;cursor:pointer;
+  box-shadow:0 6px 20px rgba(0,0,0,.45)}
+@media (max-width:980px){
+  .layout{display:block}
+  nav.toc{position:static;height:auto;max-height:none;flex:none;
+    border-right:0;border-bottom:1px solid var(--line);padding:14px 18px}
+  nav.toc ul{display:none}
+  nav.toc.open ul{display:block;max-height:60vh;overflow-y:auto}
+  main{padding:22px 20px 120px}
+  #menu{display:block}
+}
+pre { line-height: 125%; }
+td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+.highlight .hll { background-color: #49483e }
+.highlight { background: #272822; color: #F8F8F2 }
+.highlight .c { color: #959077 } /* Comment */
+.highlight .err { color: #ED007E; background-color: #1E0010 } /* Error */
+.highlight .esc { color: #F8F8F2 } /* Escape */
+.highlight .g { color: #F8F8F2 } /* Generic */
+.highlight .k { color: #66D9EF } /* Keyword */
+.highlight .l { color: #AE81FF } /* Literal */
+.highlight .n { color: #F8F8F2 } /* Name */
+.highlight .o { color: #FF4689 } /* Operator */
+.highlight .x { color: #F8F8F2 } /* Other */
+.highlight .p { color: #F8F8F2 } /* Punctuation */
+.highlight .ch { color: #959077 } /* Comment.Hashbang */
+.highlight .cm { color: #959077 } /* Comment.Multiline */
+.highlight .cp { color: #959077 } /* Comment.Preproc */
+.highlight .cpf { color: #959077 } /* Comment.PreprocFile */
+.highlight .c1 { color: #959077 } /* Comment.Single */
+.highlight .cs { color: #959077 } /* Comment.Special */
+.highlight .gd { color: #FF4689 } /* Generic.Deleted */
+.highlight .ge { color: #F8F8F2; font-style: italic } /* Generic.Emph */
+.highlight .ges { color: #F8F8F2; font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.highlight .gr { color: #FF4689 } /* Generic.Error */
+.highlight .gh { color: #F8F8F2 } /* Generic.Heading */
+.highlight .gi { color: #A6E22E } /* Generic.Inserted */
+.highlight .go { color: #66D9EF } /* Generic.Output */
+.highlight .gp { color: #FF4689; font-weight: bold } /* Generic.Prompt */
+.highlight .gs { color: #F8F8F2; font-weight: bold } /* Generic.Strong */
+.highlight .gu { color: #959077 } /* Generic.Subheading */
+.highlight .gt { color: #66D9EF } /* Generic.Traceback */
+.highlight .kc { color: #66D9EF } /* Keyword.Constant */
+.highlight .kd { color: #66D9EF } /* Keyword.Declaration */
+.highlight .kn { color: #FF4689 } /* Keyword.Namespace */
+.highlight .kp { color: #66D9EF } /* Keyword.Pseudo */
+.highlight .kr { color: #66D9EF } /* Keyword.Reserved */
+.highlight .kt { color: #66D9EF } /* Keyword.Type */
+.highlight .ld { color: #E6DB74 } /* Literal.Date */
+.highlight .m { color: #AE81FF } /* Literal.Number */
+.highlight .s { color: #E6DB74 } /* Literal.String */
+.highlight .na { color: #A6E22E } /* Name.Attribute */
+.highlight .nb { color: #A6E22E } /* Name.Builtin */
+.highlight .nc { color: #A6E22E } /* Name.Class */
+.highlight .no { color: #66D9EF } /* Name.Constant */
+.highlight .nd { color: #A6E22E } /* Name.Decorator */
+.highlight .ni { color: #F8F8F2 } /* Name.Entity */
+.highlight .ne { color: #A6E22E } /* Name.Exception */
+.highlight .nf { color: #A6E22E } /* Name.Function */
+.highlight .nl { color: #F8F8F2 } /* Name.Label */
+.highlight .nn { color: #F8F8F2 } /* Name.Namespace */
+.highlight .nx { color: #A6E22E } /* Name.Other */
+.highlight .py { color: #F8F8F2 } /* Name.Property */
+.highlight .nt { color: #FF4689 } /* Name.Tag */
+.highlight .nv { color: #F8F8F2 } /* Name.Variable */
+.highlight .ow { color: #FF4689 } /* Operator.Word */
+.highlight .pm { color: #F8F8F2 } /* Punctuation.Marker */
+.highlight .w { color: #F8F8F2 } /* Text.Whitespace */
+.highlight .mb { color: #AE81FF } /* Literal.Number.Bin */
+.highlight .mf { color: #AE81FF } /* Literal.Number.Float */
+.highlight .mh { color: #AE81FF } /* Literal.Number.Hex */
+.highlight .mi { color: #AE81FF } /* Literal.Number.Integer */
+.highlight .mo { color: #AE81FF } /* Literal.Number.Oct */
+.highlight .sa { color: #E6DB74 } /* Literal.String.Affix */
+.highlight .sb { color: #E6DB74 } /* Literal.String.Backtick */
+.highlight .sc { color: #E6DB74 } /* Literal.String.Char */
+.highlight .dl { color: #E6DB74 } /* Literal.String.Delimiter */
+.highlight .sd { color: #E6DB74 } /* Literal.String.Doc */
+.highlight .s2 { color: #E6DB74 } /* Literal.String.Double */
+.highlight .se { color: #AE81FF } /* Literal.String.Escape */
+.highlight .sh { color: #E6DB74 } /* Literal.String.Heredoc */
+.highlight .si { color: #E6DB74 } /* Literal.String.Interpol */
+.highlight .sx { color: #E6DB74 } /* Literal.String.Other */
+.highlight .sr { color: #E6DB74 } /* Literal.String.Regex */
+.highlight .s1 { color: #E6DB74 } /* Literal.String.Single */
+.highlight .ss { color: #E6DB74 } /* Literal.String.Symbol */
+.highlight .bp { color: #A6E22E } /* Name.Builtin.Pseudo */
+.highlight .fm { color: #A6E22E } /* Name.Function.Magic */
+.highlight .vc { color: #F8F8F2 } /* Name.Variable.Class */
+.highlight .vg { color: #F8F8F2 } /* Name.Variable.Global */
+.highlight .vi { color: #F8F8F2 } /* Name.Variable.Instance */
+.highlight .vm { color: #F8F8F2 } /* Name.Variable.Magic */
+.highlight .il { color: #AE81FF } /* Literal.Number.Integer.Long */
+</style>
+</head>
+<body>
+<button id="menu" type="button">☰ Contents</button>
+<div class="layout">
+<nav class="toc" id="toc">
+<h2>Contents</h2>
+<ul><li><a class="lvl1" href="#build-the-download-organizer-a-beginners-guide">Build the Download Organizer — a beginner&#x27;s guide</a></li><li><a class="lvl2" href="#what-we-are-making">What we are making</a></li><li><a class="lvl2" href="#table-of-contents">Table of contents</a></li><li><a class="lvl1" href="#part-0-plain-english-glossary">Part 0 — Plain-English glossary</a></li><li><a class="lvl1" href="#part-1-install-python-and-set-up">Part 1 — Install Python and set up</a></li><li><a class="lvl2" href="#11-install-python">1.1 Install Python</a></li><li><a class="lvl2" href="#12-make-a-project-folder">1.2 Make a project folder</a></li><li><a class="lvl2" href="#13-get-a-proper-editor">1.3 Get a proper editor</a></li><li><a class="lvl1" href="#part-2-stage-1-the-simplest-possible-sorter">Part 2 — Stage 1: the simplest possible sorter</a></li><li><a class="lvl2" href="#21-make-something-to-sort">2.1 Make something to sort</a></li><li><a class="lvl2" href="#22-run-it">2.2 Run it</a></li><li><a class="lvl2" href="#23-what-just-happened-line-by-line">2.3 What just happened? (line by line)</a></li><li><a class="lvl1" href="#part-3-stage-2-reading-a-files-real-type">Part 3 — Stage 2: reading a file&#x27;s real type</a></li><li><a class="lvl2" href="#31-try-the-magic-trick">3.1 Try the magic trick</a></li><li><a class="lvl2" href="#32-new-things-explained">3.2 New things explained</a></li><li><a class="lvl2" href="#33-merge-into-the-sorter">3.3 Merge into the sorter</a></li><li><a class="lvl1" href="#part-4-stage-3-reading-a-files-text">Part 4 — Stage 3: reading a file&#x27;s text</a></li><li><a class="lvl2" href="#41-the-two-important-tricks">4.1 The two important tricks</a></li><li><a class="lvl2" href="#42-try-it">4.2 Try it</a></li><li><a class="lvl1" href="#part-5-stage-4-the-pattern-idea">Part 5 — Stage 4: the pattern idea</a></li><li><a class="lvl2" href="#51-the-insight">5.1 The insight</a></li><li><a class="lvl2" href="#52-building-it">5.2 Building it</a></li><li><a class="lvl2" href="#53-new-things-explained">5.3 New things explained</a></li><li><a class="lvl2" href="#54-counting-patterns">5.4 Counting patterns</a></li><li><a class="lvl2" href="#55-turning-signals-into-folder-names">5.5 Turning signals into folder names</a></li><li><a class="lvl1" href="#part-6-stage-5-suggesting-folders-and-accepting-them">Part 6 — Stage 5: suggesting folders (and accepting them)</a></li><li><a class="lvl1" href="#part-7-stage-6-filters-and-safety">Part 7 — Stage 6: filters and safety</a></li><li><a class="lvl2" href="#71-ignore-half-finished-downloads">7.1 Ignore half-finished downloads</a></li><li><a class="lvl2" href="#72-ignore-files-written-seconds-ago">7.2 Ignore files written seconds ago</a></li><li><a class="lvl2" href="#73-never-overwrite">7.3 Never overwrite</a></li><li><a class="lvl1" href="#part-8-stage-7-letting-the-user-choose">Part 8 — Stage 7: letting the user choose</a></li><li><a class="lvl1" href="#part-9-stage-8-settings-that-survive-a-restart">Part 9 — Stage 8: settings that survive a restart</a></li><li><a class="lvl1" href="#part-10-stage-9-watch-mode">Part 10 — Stage 9: watch mode</a></li><li><a class="lvl1" href="#part-11-stage-10-undo">Part 11 — Stage 10: undo</a></li><li><a class="lvl1" href="#part-12-stage-11-the-desktop-window">Part 12 — Stage 11: the desktop window</a></li><li><a class="lvl2" href="#121-the-parts-explained">12.1 The parts explained</a></li><li><a class="lvl2" href="#122-tabs">12.2 Tabs</a></li><li><a class="lvl2" href="#123-reading-a-text-box">12.3 Reading a text box</a></li><li><a class="lvl2" href="#124-the-button-that-actually-runs-the-app">12.4 The button that actually runs the app</a></li><li><a class="lvl1" href="#part-13-stage-12-turning-it-into-a-windows-exe">Part 13 — Stage 12: turning it into a Windows .exe</a></li><li><a class="lvl2" href="#131-install-it">13.1 Install it</a></li><li><a class="lvl2" href="#132-build">13.2 Build</a></li><li><a class="lvl2" href="#133-what-pyinstaller-actually-does">13.3 What PyInstaller actually does</a></li><li><a class="lvl2" href="#134-why-settings-move-to-appdata">13.4 Why settings move to %APPDATA%</a></li><li><a class="lvl1" href="#part-14-git-and-github-explained-properly">Part 14 — Git and GitHub, explained properly</a></li><li><a class="lvl2" href="#141-why-bother">14.1 Why bother?</a></li><li><a class="lvl2" href="#142-install-git">14.2 Install Git</a></li><li><a class="lvl2" href="#143-tell-git-who-you-are-once">14.3 Tell Git who you are (once)</a></li><li><a class="lvl2" href="#144-the-three-step-idea-working-staged-saved">14.4 The three-step idea: working → staged → saved</a></li><li><a class="lvl2" href="#145-start-tracking-your-project">14.5 Start tracking your project</a></li><li><a class="lvl2" href="#146-save-your-first-snapshot">14.6 Save your first snapshot</a></li><li><a class="lvl2" href="#147-put-it-on-github">14.7 Put it on GitHub</a></li><li><a class="lvl2" href="#148-the-everyday-rhythm">14.8 The everyday rhythm</a></li><li><a class="lvl2" href="#149-logging-in-tokens">14.9 Logging in / tokens</a></li><li><a class="lvl2" href="#1410-two-bonus-git-skills">14.10 Two bonus Git skills</a></li><li><a class="lvl1" href="#part-15-when-things-go-wrong">Part 15 — When things go wrong</a></li><li><a class="lvl2" href="#you-built-it">You built it</a></li><li><a class="lvl1" href="#part-16-the-complete-file-map-answer-key">Part 16 — The complete file map (answer key)</a></li></ul>
+</nav>
+<main>
+<article>
+<h1 id="build-the-download-organizer-a-beginners-guide">Build the Download Organizer — a beginner's guide<a class="anchor" href="#build-the-download-organizer-a-beginners-guide" aria-label="link">#</a></h1>
+<p>Hi. This is the long, slow, everything-explained version. If you follow it from the top you will build this whole app yourself, and you will understand every line. No prior Python needed — if you can follow a recipe, you can do this.</p>
+<p>We build it in stages. Each stage is a small working program you can run before moving on. At the end we turn it into a Windows <code>.exe</code> and put it on GitHub.</p>
+<p><strong>Read the "What just happened?" boxes.</strong> They explain the <em>why</em>, which is the part that actually teaches you something.</p>
+<h2 id="what-we-are-making">What we are making<a class="anchor" href="#what-we-are-making" aria-label="link">#</a></h2>
+<p>A program that tidies your Downloads folder. It sorts files into folders like <code>Images</code>, <code>Videos</code>, <code>Installers</code> — but instead of only trusting the file name, it <strong>opens each file and looks at what is really inside</strong>.</p>
+<p>The clever bit is the final stage: when several downloads share something unusual (they are all Factorio mods, all screenshots, all Android apps), the program notices the pattern and <em>suggests</em> giving them their own folder. You approve it once and it remembers. Nothing about Minecraft or any other game is hard-coded — it learns from whatever is in <em>your</em> downloads.</p>
+<h2 id="table-of-contents">Table of contents<a class="anchor" href="#table-of-contents" aria-label="link">#</a></h2>
+<ul><li>Part 0 — Plain-English glossary (read this even if you skip nothing else)</li><li>Part 1 — Install Python and set up your workspace</li><li>Part 2 — Stage 1: the simplest possible sorter</li><li>Part 3 — Stage 2: reading a file's real type (magic bytes)</li><li>Part 4 — Stage 3: reading a file's text</li><li>Part 5 — Stage 4: the pattern idea (signals)</li><li>Part 6 — Stage 5: suggesting folders</li><li>Part 7 — Stage 6: filters and safety</li><li>Part 8 — Stage 7: letting the user choose (command line)</li><li>Part 9 — Stage 8: settings that survive a restart</li><li>Part 10 — Stage 9: watch mode</li><li>Part 11 — Stage 10: undo</li><li>Part 12 — Stage 11: the desktop window</li><li>Part 13 — Stage 12: turning it into a Windows .exe</li><li>Part 14 — Git and GitHub, explained properly</li><li>Part 15 — When things go wrong (troubleshooting)</li><li>Part 16 — The complete file map (answer key)</li></ul>
+<p>This tutorial builds a working app with every feature the finished one has — you write your own version, with your own names and a simpler window. Part 16 is a side-by-side map of "what the tutorial calls it" versus "what the finished code calls it", so you can always find your way around the real files.</p>
+<hr>
+<h1 id="part-0-plain-english-glossary">Part 0 — Plain-English glossary<a class="anchor" href="#part-0-plain-english-glossary" aria-label="link">#</a></h1>
+<p>You will see these words constantly. Here is what they mean, in your language.</p>
+<p><strong>Terminal / console / PowerShell / command prompt.</strong> A window where you type commands instead of clicking. On Windows, press the Start button and type <code>PowerShell</code>. It opens a blue-ish window. You type a line, press Enter, it does something.</p>
+<p><strong>Command.</strong> A line you type in the terminal. Example: <code>python --version</code>. The first word is the program, the rest are instructions to it.</p>
+<p><strong>Python.</strong> A programming language. You write instructions in a text file, then tell Python to run that file.</p>
+<p><strong>Script / program / code.</strong> All mean "a text file of Python instructions".</p>
+<p><strong><code>.py</code> file.</strong> A Python file. <code>organizer.py</code> is one.</p>
+<p><strong>Function.</strong> A named block of instructions you can run by saying its name. <code>print("hi")</code> runs the built-in function <code>print</code>. You make your own with <code>def</code>:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">def</span><span class="w"> </span><span class="nf">greet</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Hello"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+<span class="n">greet</span><span class="p">(</span><span class="s2">"Muneeb"</span><span class="p">)</span>     <span class="c1"># prints: Hello Muneeb</span>
+</pre></div>
+<ul><li><code>def</code> means "I am defining a function".</li><li><code>name</code> in the brackets is an <em>input</em> (a "parameter").</li><li>The indented lines (4 spaces) are the function's body. <strong>Indentation is not decoration in Python — it is how Python knows what belongs inside the function.</strong> Use exactly 4 spaces, never a Tab.</li><li><code>return</code> sends a value back out. <code>print</code> just shows it.</li></ul>
+<p><strong>Variable.</strong> A named box holding a value. <code>age = 5</code> puts 5 in the box <code>age</code>.</p>
+<p><strong>String.</strong> Text, in quotes: <code>"hello"</code>. <strong>Integer</strong>: a whole number, <code>5</code>. <strong>List</strong>: an ordered collection, <code>["a", "b"]</code>. <strong>Dictionary</strong>: named boxes, <code>{"jpg": "Images"}</code> — look up <code>"jpg"</code> and you get <code>"Images"</code>.</p>
+<p><strong>Import.</strong> Borrowing tools someone else wrote. <code>import os</code> loads Python's "os" toolbox. <code>from pathlib import Path</code> loads just one tool from a toolbox.</p>
+<p><strong>Error / traceback.</strong> When Python cannot do something, it prints a wall of red text called a traceback. Read the <strong>last line</strong> first — that is the actual problem. The lines above show where it happened.</p>
+<p><strong>Byte.</strong> One unit of raw data. A file is millions of bytes. <code>b"\x89PNG"</code> means "I mean these exact raw bytes", the <code>b</code> standing for "bytes".</p>
+<hr>
+<h1 id="part-1-install-python-and-set-up">Part 1 — Install Python and set up<a class="anchor" href="#part-1-install-python-and-set-up" aria-label="link">#</a></h1>
+<h2 id="11-install-python">1.1 Install Python<a class="anchor" href="#11-install-python" aria-label="link">#</a></h2>
+<ol><li>Go to <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">https://www.python.org/downloads/</a> and download the latest Python for Windows.</li><li>Run the installer. <strong>On the first screen, tick the checkbox that says "Add python.exe to PATH".</strong> This matters a lot — it lets you type <code>python</code> in the terminal. If you miss it, re-run the installer and choose "Modify".</li><li>Click through and finish.</li></ol>
+<p>Now open PowerShell (Start button → type <code>PowerShell</code>) and type:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">python</span> <span class="p">-</span><span class="n">-version</span>
+</pre></div>
+<p>You should see something like <code>Python 3.13.1</code>.</p>
+<blockquote><p><strong>What just happened?</strong> You ran the program <code>python</code> and gave it the instruction <code>--version</code>, which means "tell me your version". If instead you see <code>python : The term 'python' is not recognized</code>, the PATH checkbox was missed — reinstall with it ticked.</p></blockquote>
+<h2 id="12-make-a-project-folder">1.2 Make a project folder<a class="anchor" href="#12-make-a-project-folder" aria-label="link">#</a></h2>
+<p>In PowerShell:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="nb">cd </span><span class="p">~</span>
+<span class="n">mkdir</span> <span class="n">download-organizer</span>
+<span class="nb">cd </span><span class="n">download-organizer</span>
+</pre></div>
+<ul><li><code>cd ~</code> means "change directory to my home folder". <code>~</code> is shorthand for your user folder.</li><li><code>mkdir</code> makes a new folder.</li><li>The second <code>cd</code> moves you <em>into</em> it.</li></ul>
+<p>To check where you are, type <code>pwd</code> (print working directory) or <code>cd</code> alone.</p>
+<h2 id="13-get-a-proper-editor">1.3 Get a proper editor<a class="anchor" href="#13-get-a-proper-editor" aria-label="link">#</a></h2>
+<p>Download <strong>Visual Studio Code</strong> (free) from <a href="https://code.visualstudio.com/" target="_blank" rel="noopener">https://code.visualstudio.com/</a>. This is where you will write code. Install it, then in PowerShell type:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">code</span> <span class="p">.</span>
+</pre></div>
+<p>The <code>.</code> means "this folder". A window opens showing your empty project.</p>
+<blockquote><p><strong>Why not Notepad?</strong> Notepad works, but VS Code colours your code, shows mistakes, and has a built-in terminal (menu: Terminal → New Terminal) so you can run code without switching windows. It is the tool professionals use.</p></blockquote>
+<p>You are ready. Every stage below is: make a <code>.py</code> file, paste the code, run it.</p>
+<hr>
+<h1 id="part-2-stage-1-the-simplest-possible-sorter">Part 2 — Stage 1: the simplest possible sorter<a class="anchor" href="#part-2-stage-1-the-simplest-possible-sorter" aria-label="link">#</a></h1>
+<p>We start with a deliberately dumb version that only looks at file names. It works, and it gives us a base to build on.</p>
+<p>Make a file called <code>stage1.py</code> and put this in it:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="c1"># Stage 1: sort by extension only.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>      <span class="c1"># tools for working with file paths</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>                 <span class="c1"># tools for moving files</span>
+
+<span class="n">EXTENSIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"jpg"</span><span class="p">:</span> <span class="s2">"Images"</span><span class="p">,</span>
+    <span class="s2">"png"</span><span class="p">:</span> <span class="s2">"Images"</span><span class="p">,</span>
+    <span class="s2">"mp3"</span><span class="p">:</span> <span class="s2">"Audio"</span><span class="p">,</span>
+    <span class="s2">"wav"</span><span class="p">:</span> <span class="s2">"Audio"</span><span class="p">,</span>
+    <span class="s2">"pdf"</span><span class="p">:</span> <span class="s2">"Documents"</span><span class="p">,</span>
+    <span class="s2">"txt"</span><span class="p">:</span> <span class="s2">"Documents"</span><span class="p">,</span>
+    <span class="s2">"mp4"</span><span class="p">:</span> <span class="s2">"Videos"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sort_folder</span><span class="p">(</span><span class="n">folder_path</span><span class="p">):</span>
+    <span class="n">folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">folder_path</span><span class="p">)</span>          <span class="c1"># turn the text into a real path object</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">folder</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>       <span class="c1"># go through everything in the folder</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>          <span class="c1"># skip subfolders</span>
+            <span class="k">continue</span>
+
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>     <span class="c1"># ".JPG"  -&gt;  "jpg"</span>
+        <span class="n">target_name</span> <span class="o">=</span> <span class="n">EXTENSIONS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ext</span><span class="p">,</span> <span class="s2">"Other"</span><span class="p">)</span>  <span class="c1"># find its folder</span>
+        <span class="n">target_folder</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">/</span> <span class="n">target_name</span>        <span class="c1"># build the full path</span>
+
+        <span class="n">target_folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>          <span class="c1"># create it if missing</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_folder</span> <span class="o">/</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"moved"</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"-&gt;"</span><span class="p">,</span> <span class="n">target_name</span><span class="p">)</span>
+
+
+<span class="n">sort_folder</span><span class="p">(</span><span class="s2">"test-downloads"</span><span class="p">)</span>
+</pre></div>
+<h2 id="21-make-something-to-sort">2.1 Make something to sort<a class="anchor" href="#21-make-something-to-sort" aria-label="link">#</a></h2>
+<p>In PowerShell:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">mkdir</span> <span class="nb">test-downloads</span>
+</pre></div>
+<p>Then drop a few junk files in that folder (any random files from your computer — a photo, a PDF, whatever). It does not matter what.</p>
+<h2 id="22-run-it">2.2 Run it<a class="anchor" href="#22-run-it" aria-label="link">#</a></h2>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">python</span> <span class="n">stage1</span><span class="p">.</span><span class="n">py</span>
+</pre></div>
+<p>Now open <code>test-downloads</code> in File Explorer. You will see folders called <code>Images</code>, <code>Audio</code>, and so on, with files inside.</p>
+<h2 id="23-what-just-happened-line-by-line">2.3 What just happened? (line by line)<a class="anchor" href="#23-what-just-happened-line-by-line" aria-label="link">#</a></h2>
+<ul><li><code>from pathlib import Path</code> — <code>Path</code> is Python's way of handling file paths. The big win: <code>folder / "Images"</code> builds a correct path on any computer, so you never have to worry about <code>/</code> versus <code>\</code>.</li><li><code>for item in folder.iterdir():</code> — <code>iterdir()</code> hands you each thing in the folder one at a time. The <code>for</code> loop repeats the indented block for each one.</li><li><code>if not item.is_file(): continue</code> — <code>is_file()</code> is <code>True</code> for files and <code>False</code> for folders. <code>continue</code> means "skip the rest of this loop and go to the next item", so we never touch folders.</li><li><code>item.suffix</code> gives the extension <em>with</em> the dot: <code>.jpg</code>. <code>.lstrip(".")</code> removes the dot → <code>jpg</code>. <code>.lower()</code> makes it lowercase so <code>.JPG</code> still matches.</li><li><code>EXTENSIONS.get(ext, "Other")</code> looks up <code>ext</code>. If it is not in the dictionary, <code>.get</code> returns <code>"Other"</code> instead of crashing. <strong>This is an important habit: always give a fallback.</strong></li><li><code>target_folder.mkdir(exist_ok=True)</code> creates the folder. <code>exist_ok=True</code> means "if it is already there, don't complain".</li><li><code>shutil.move(source, destination)</code> moves the file. It wants text paths, so we wrap with <code>str(...)</code>.</li><li><code>print(...)</code> tells you what happened.</li></ul>
+<p>Notice <code>def sort_folder(folder_path):</code> — we made a function. The last line calls it. We could call it twice with different folders.</p>
+<p><strong>This is a real program.</strong> Now let's make it smart.</p>
+<hr>
+<h1 id="part-3-stage-2-reading-a-files-real-type">Part 3 — Stage 2: reading a file's real type<a class="anchor" href="#part-3-stage-2-reading-a-files-real-type" aria-label="link">#</a></h1>
+<p>The file name lies. People rename things. So instead of trusting <code>holiday.jpg</code>, we open the file and read its <strong>first few bytes</strong>.</p>
+<p>Every file type starts with a special signature:</p>
+<table><thead><tr><th>File type</th><th>Starts with</th></tr></thead><tbody><tr><td>PNG image</td><td><code>\x89PNG</code></td></tr><tr><td>JPEG image</td><td><code>\xff\xd8\xff</code></td></tr><tr><td>PDF</td><td><code>%PDF</code></td></tr><tr><td>Zip (and .jar, .apk, .docx…)</td><td><code>PK\x03\x04</code></td></tr><tr><td>Windows .exe</td><td><code>MZ</code></td></tr></tbody></table>
+<p>Make <code>stage2.py</code>:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="c1"># Stage 2: read the first bytes of a file to find its real type.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">read_start</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">how_many</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the first `how_many` bytes of a file."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>        <span class="c1"># "rb" = read, binary</span>
+            <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">how_many</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">b</span><span class="s2">""</span>                          <span class="c1"># e.g. file locked; give up quietly</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sniff_type</span><span class="p">(</span><span class="n">start</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Guess a file's type from its starting bytes. None means 'no idea'."""</span>
+    <span class="k">if</span> <span class="n">start</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">"</span><span class="se">\x89</span><span class="s2">PNG</span><span class="se">\r\n\x1a\n</span><span class="s2">"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"image"</span>
+    <span class="k">if</span> <span class="n">start</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">"</span><span class="se">\xff\xd8\xff</span><span class="s2">"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"image"</span>
+    <span class="k">if</span> <span class="n">start</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">"%PDF"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"document"</span>
+    <span class="k">if</span> <span class="n">start</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">"PK</span><span class="se">\x03\x04</span><span class="s2">"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"archive"</span>
+    <span class="k">if</span> <span class="n">start</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">"MZ"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"executable"</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="c1"># --- quick test ---</span>
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"test-downloads"</span><span class="p">]:</span>
+    <span class="n">folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">folder</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">folder</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+                <span class="n">kind</span> <span class="o">=</span> <span class="n">sniff_type</span><span class="p">(</span><span class="n">read_start</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">45</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<p>Run it:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">python</span> <span class="n">stage2</span><span class="p">.</span><span class="n">py</span>
+</pre></div>
+<h2 id="31-try-the-magic-trick">3.1 Try the magic trick<a class="anchor" href="#31-try-the-magic-trick" aria-label="link">#</a></h2>
+<p>Find any PNG image on your computer. Copy it into <code>test-downloads</code> and <strong>rename it to <code>secret.txt</code></strong>. Run <code>stage2.py</code> again. It still reports <code>image</code>.</p>
+<blockquote><p><strong>What just happened?</strong> The bytes do not care what the file is called. That is the entire idea behind "content detection", and it is why this app is better than a plain extension sorter.</p></blockquote>
+<h2 id="32-new-things-explained">3.2 New things explained<a class="anchor" href="#32-new-things-explained" aria-label="link">#</a></h2>
+<ul><li><code>open(path, "rb")</code> opens the file for reading in <strong>binary</strong> mode. Without the <code>b</code>, Python would try to read it as text and choke on pictures.</li><li><code>f.read(32)</code> reads up to 32 bytes. The <code>with ... as f:</code> block closes the file automatically when done — good practice that stops files being left locked.</li><li><code>b"\x89PNG"</code> — the <code>b</code> marks these as <strong>bytes</strong>, not text. <code>\x89</code> is a byte written in hex, used because it is not a normal typable character.</li><li><code>start.startswith(...)</code> asks "do these bytes begin with this?".</li><li><code>try:</code> / <code>except OSError:</code> — attempt something risky; if it fails, do the fallback instead of crashing. Here, if a file is locked by another program, we hand back empty bytes.</li><li><code>return None</code> — "I do not recognise this". <code>None</code> is Python's word for "nothing".</li></ul>
+<h2 id="33-merge-into-the-sorter">3.3 Merge into the sorter<a class="anchor" href="#33-merge-into-the-sorter" aria-label="link">#</a></h2>
+<p>In <code>stage1.py</code>, replace the extension lookup with: try magic bytes first, and only fall back to the extension if that returned <code>None</code>.</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">kind</span> <span class="o">=</span> <span class="n">sniff_type</span><span class="p">(</span><span class="n">read_start</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+<span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"image"</span><span class="p">:</span>
+    <span class="n">target_name</span> <span class="o">=</span> <span class="s2">"Images"</span>
+<span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"document"</span><span class="p">:</span>
+    <span class="n">target_name</span> <span class="o">=</span> <span class="s2">"Documents"</span>
+<span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"archive"</span><span class="p">:</span>
+    <span class="n">target_name</span> <span class="o">=</span> <span class="s2">"Archives"</span>
+<span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"executable"</span><span class="p">:</span>
+    <span class="n">target_name</span> <span class="o">=</span> <span class="s2">"Installers"</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">target_name</span> <span class="o">=</span> <span class="n">EXTENSIONS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ext</span><span class="p">,</span> <span class="s2">"Other"</span><span class="p">)</span>     <span class="c1"># the old, name-based guess</span>
+</pre></div>
+<p>Now a PNG renamed to <code>.txt</code> goes to <code>Images</code>. Stage 2 done.</p>
+<hr>
+<h1 id="part-4-stage-3-reading-a-files-text">Part 4 — Stage 3: reading a file's text<a class="anchor" href="#part-4-stage-3-reading-a-files-text" aria-label="link">#</a></h1>
+<p>Magic bytes work great — when we know the signature. A plain text file has no signature. So for those we read the <em>words</em> and look for clues.</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="c1"># Stage 3: for text files, guess from the content.</span>
+
+<span class="n">TEXT_ENDINGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"txt"</span><span class="p">,</span> <span class="s2">"md"</span><span class="p">,</span> <span class="s2">"py"</span><span class="p">,</span> <span class="s2">"js"</span><span class="p">,</span> <span class="s2">"html"</span><span class="p">,</span> <span class="s2">"css"</span><span class="p">,</span> <span class="s2">"json"</span><span class="p">,</span> <span class="s2">"csv"</span><span class="p">}</span>
+
+<span class="n">CODE_CLUES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"#!/usr/bin/env python"</span><span class="p">,</span> <span class="s2">"#include"</span><span class="p">,</span> <span class="s2">"import "</span><span class="p">,</span> <span class="s2">"def "</span><span class="p">,</span> <span class="s2">"class "</span><span class="p">,</span>
+    <span class="s2">"function "</span><span class="p">,</span> <span class="s2">"const "</span><span class="p">,</span> <span class="s2">"let "</span><span class="p">,</span> <span class="s2">"var "</span><span class="p">,</span> <span class="s2">"&lt;?php"</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">sniff_text</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Read the beginning of a file and guess what kind of text it is."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8192</span><span class="p">)</span>          <span class="c1"># first 8 KB is plenty</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Real text has no zero bytes. Binary files are full of them.</span>
+    <span class="k">if</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\x00</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">text</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">clue</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">for</span> <span class="n">clue</span> <span class="ow">in</span> <span class="n">CODE_CLUES</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"Code"</span>
+    <span class="k">if</span> <span class="s2">"&lt;html"</span> <span class="ow">in</span> <span class="n">text</span> <span class="ow">or</span> <span class="s2">"&lt;!doctype html"</span> <span class="ow">in</span> <span class="n">text</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"Code"</span>
+    <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"{"</span><span class="p">,</span> <span class="s2">"["</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="s2">"Code"</span>                   <span class="c1"># looks like JSON data</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+</pre></div>
+<h2 id="41-the-two-important-tricks">4.1 The two important tricks<a class="anchor" href="#41-the-two-important-tricks" aria-label="link">#</a></h2>
+<p><strong>The zero-byte check.</strong> <code>b"\x00"</code> is a zero byte. Text files never contain one; pictures, videos and zip files are full of them. We test for that <strong>before</strong> pretending the file is text. Without it, we would try to "read" a movie file as words and get nonsense.</p>
+<p><strong><code>errors="ignore"</code>.</strong> When turning bytes into text, some bytes might not be valid characters. This tells Python to skip those instead of crashing.</p>
+<p><code>any(clue in text for clue in CODE_CLUES)</code> is a compact way to say "if <strong>any</strong> of these clues appears in the text". It is like a mini <code>for</code> loop.</p>
+<blockquote><p><strong>Idea to remember:</strong> <code>any(...)</code> stops at the first hit. <code>all(...)</code> needs every one. Both read beautifully once you get used to them.</p></blockquote>
+<h2 id="42-try-it">4.2 Try it<a class="anchor" href="#42-try-it" aria-label="link">#</a></h2>
+<p>Make two files in <code>test-downloads</code>: one called <code>hello.txt</code> containing <code>print("hi") and some code</code>, and one called <code>story.txt</code> containing normal sentences. Run the sniffer. The first says <code>Code</code>; the second says <code>None</code> (meaning "just ordinary text").</p>
+<p>In the finished project the "is this text at all?" check is its own small helper called <code>_looks_like_text()</code> (in <code>patterns.py</code>): it reads a couple of kilobytes and returns True when there is no zero byte. The finished app then lets the content signals and the extension finish the job. The <code>CODE_CLUES</code> idea above is a neat extra you can add yourself if you want <code>.txt</code> files full of code to land in <code>Code</code>.</p>
+<hr>
+<h1 id="part-5-stage-4-the-pattern-idea">Part 5 — Stage 4: the pattern idea<a class="anchor" href="#part-5-stage-4-the-pattern-idea" aria-label="link">#</a></h1>
+<p>Now the heart of the app. This is the part you asked for: <em>don't hard-code a Minecraft folder — recognise patterns and suggest folders.</em></p>
+<h2 id="51-the-insight">5.1 The insight<a class="anchor" href="#51-the-insight" aria-label="link">#</a></h2>
+<p>Imagine five files in Downloads:</p>
+<ul><li><code>space-exploration.zip</code></li><li><code>krastorio.zip</code></li><li><code>bobs-mods.zip</code></li></ul>
+<p>On their own, nothing in common. But open them, and <strong>every one contains a file called <code>info.json</code></strong>. That is not a coincidence — <code>info.json</code> is how Factorio mods are packaged. That shared trait is a <strong>pattern</strong>.</p>
+<p>We call that trait a <strong>signal</strong> — a small fact we measured about a file:</p>
+<ul><li><code>inner:info.json</code> — "inside this archive there is <code>info.json</code>"</li><li><code>ext:zip</code> — "its name ends in .zip"</li><li><code>name:invoice</code> — "the name contains the word invoice"</li><li><code>prefix:IMG_</code> — "the name starts with IMG_"</li></ul>
+<p>A signal on its own is boring. <strong>A signal shared by several files is a hint that they belong together.</strong></p>
+<h2 id="52-building-it">5.2 Building it<a class="anchor" href="#52-building-it" aria-label="link">#</a></h2>
+<p>Here is a trimmed version. Make <code>stage4_patterns.py</code>:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="c1"># Stage 4: work out the signals for a file.</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">look_inside</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the set of file names inside a zip, lower-cased."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">n</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">()}</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">zipfile</span><span class="o">.</span><span class="n">BadZipFile</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>          <span class="c1"># not a zip, or unreadable -&gt; empty set</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">inner_signals</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s2">"info.json"</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"inner:factorio-mod"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"about/about.xml"</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"inner:rimworld-mod"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"fabric.mod.json"</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"inner:minecraft-mod"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"androidmanifest.xml"</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"inner:android-app"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""All the signals for one file."""</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ext:</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ext</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"zip"</span><span class="p">,</span> <span class="s2">"jar"</span><span class="p">,</span> <span class="s2">"apk"</span><span class="p">}:</span>
+        <span class="n">result</span> <span class="o">|=</span> <span class="n">inner_signals</span><span class="p">(</span><span class="n">look_inside</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="s2">"screenshot"</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"name:screenshot"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="c1"># --- test it ---</span>
+<span class="n">folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"demo_downloads"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">folder</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"*.zip"</span><span class="p">)):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">"-&gt;"</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">analyze</span><span class="p">(</span><span class="n">item</span><span class="p">)))</span>
+</pre></div>
+<p>(If you have not made <code>demo_downloads</code> yet, run <code>python make_demo_files.py</code> first — it comes with the project and builds a safe fake folder full of these files.)</p>
+<h2 id="53-new-things-explained">5.3 New things explained<a class="anchor" href="#53-new-things-explained" aria-label="link">#</a></h2>
+<ul><li><code>zipfile.ZipFile(path)</code> opens a <code>.zip</code> archive. <code>zf.namelist()</code> gives the list of files <em>inside</em> it. This is how we "look inside" a file.</li><li><code>{n.lower() for n in zf.namelist()}</code> is a <strong>set comprehension</strong> — the curly braces build a <em>set</em> (a bag of unique items) instead of a list. We use a set because we only care whether something is present, not how many times.</li><li><code>found.add(...)</code> puts one item into a set. <code>result |= other</code> merges one set into another (<code>|=</code> means "add everything from the right").</li><li><code>folder.glob("*.zip")</code> lists every file ending in <code>.zip</code>. The <code>*</code> means "anything".</li></ul>
+<h2 id="54-counting-patterns">5.4 Counting patterns<a class="anchor" href="#54-counting-patterns" aria-label="link">#</a></h2>
+<p>Signals alone are not enough — we only suggest a folder when <strong>several</strong> files share a signal. So we count:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">def</span><span class="w"> </span><span class="nf">suggest</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">minimum</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">signals</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">signal</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">:</span>
+            <span class="n">counts</span><span class="p">[</span><span class="n">signal</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="n">minimum</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"inner:"</span><span class="p">)]</span>
+</pre></div>
+<p><code>counts.get(signal, 0) + 1</code> means "whatever the count is so far, add one". This is the classic way to count things in Python.</p>
+<p>Now run it on your <code>demo_downloads</code> folder and you will see it propose <code>inner:factorio-mod</code> and <code>inner:rimworld-mod</code> <strong>without anyone telling it those exist</strong>. That is the pattern engine.</p>
+<h2 id="55-turning-signals-into-folder-names">5.5 Turning signals into folder names<a class="anchor" href="#55-turning-signals-into-folder-names" aria-label="link">#</a></h2>
+<p>A signal like <code>inner:factoriomod</code> is ugly. We want "Factorio Mods". So we keep a translation table:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">FRIENDLY</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"inner:factorio-mod"</span><span class="p">:</span> <span class="s2">"Factorio Mods"</span><span class="p">,</span>
+    <span class="s2">"inner:rimworld-mod"</span><span class="p">:</span> <span class="s2">"RimWorld Mods"</span><span class="p">,</span>
+    <span class="s2">"name:screenshot"</span><span class="p">:</span> <span class="s2">"Screenshots"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">friendly_name</span><span class="p">(</span><span class="n">signal</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">signal</span> <span class="ow">in</span> <span class="n">FRIENDLY</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FRIENDLY</span><span class="p">[</span><span class="n">signal</span><span class="p">]</span>
+    <span class="c1"># otherwise improvise a name from the signal itself</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">part</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+</pre></div>
+<p><code>.split(":", 1)</code> cuts the signal into two at the first colon, and <code>.title()</code> turns <code>"factorio mod"</code> into <code>"Factorio Mod"</code>.</p>
+<p><strong>The key point: adding a new known pattern is just one new line in a dictionary</strong> — data, not code. That is why this design is good.</p>
+<p>In the finished project all of this lives in <code>patterns.py</code>, and the pieces have names you can search for:</p>
+<ul><li><code>MAGIC_TYPES</code> — the bytes table (PNG, PDF, MZ, …), used by <code>magic_type()</code>.</li><li><code>_looks_like_text()</code> — the zero-byte check for "is this text at all?".</li><li><code>NAME_KEYWORDS</code> / <code>NAME_PREFIXES</code> — the word and prefix tables (<code>screenshot</code>, <code>IMG_</code>, <code>DSC_</code>, …).</li><li><code>_inner_signals()</code> — everything that looks <em>inside</em> a zip.</li><li><code>analyze()</code> — runs all of the above for one file.</li><li><code>signals()</code> — flattens one file's results into signal strings.</li><li><code>friendly_folder()</code> — turns a signal into a folder name.</li><li><code>FRIENDLY_FOLDERS</code> — the table of nice names for known signals.</li><li><code>suggest()</code> — counts signals and proposes folders.</li></ul>
+<hr>
+<h1 id="part-6-stage-5-suggesting-folders-and-accepting-them">Part 6 — Stage 5: suggesting folders (and accepting them)<a class="anchor" href="#part-6-stage-5-suggesting-folders-and-accepting-them" aria-label="link">#</a></h1>
+<p>A suggestion is only useful if the user can say "yes". So we store accepted patterns as <strong>rules</strong> and check them first.</p>
+<p>The rule is just a dictionary:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="p">{</span><span class="s2">"match"</span><span class="p">:</span> <span class="s2">"inner:factorio-mod"</span><span class="p">,</span> <span class="s2">"folder"</span><span class="p">:</span> <span class="s2">"Factorio Mods"</span><span class="p">}</span>
+</pre></div>
+<p><code>match</code> is the signal; <code>folder</code> is where those files should go.</p>
+<p>When classifying a file, the order of decisions is:</p>
+<ol><li>Does a <strong>rule</strong> match a signal on this file? → use that folder.</li><li>Does an <strong>automatic signal</strong> match? (screenshots, Android apps, …) → use that.</li><li>What does the <strong>bytes</strong> say the type is? → Images, Videos, …</li><li>Fall back to the <strong>extension</strong> from our settings.</li></ol>
+<p>First match wins. That is the whole priority system — just the order of a few <code>if</code> checks. Here is the idea in code:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">def</span><span class="w"> </span><span class="nf">classify</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">signals</span><span class="p">,</span> <span class="n">rules</span><span class="p">,</span> <span class="n">auto</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">:</span>                        <span class="c1"># 1. user rules</span>
+        <span class="k">if</span> <span class="n">rule</span><span class="p">[</span><span class="s2">"match"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rule</span><span class="p">[</span><span class="s2">"folder"</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">signal</span><span class="p">,</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">auto</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>       <span class="c1"># 2. automatic patterns</span>
+        <span class="k">if</span> <span class="n">signal</span> <span class="ow">in</span> <span class="n">signals</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">folder</span>
+
+    <span class="k">return</span> <span class="kc">None</span>                               <span class="c1"># 3/4: let the type/extension decide</span>
+</pre></div>
+<blockquote><p><strong>Why do rules come first?</strong> Because the user is always right. If you told the app "RimWorld mods go in <code>Games/RimWorld</code>", that beats every automatic guess.</p></blockquote>
+<p>A file can carry several signals at once, so "which one wins?" needs an answer. The finished app gives each <em>kind</em> of signal a rank and picks the highest:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">SIGNAL_PRIORITY</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"inner"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"prefix"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"ext"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                   <span class="s2">"type"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"version"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+</pre></div>
+<p><code>inner</code> (found by really opening the file) always beats <code>name</code> (a guess from the filename). That helper is <code>_best_match()</code> in <code>organizer.py</code>, and the automatic patterns live in the <code>AUTO_SIGNALS</code> dictionary — the same "data, not code" idea as <code>FRIENDLY_FOLDERS</code>, so adding an automatic pattern is one line.</p>
+<p>The version subfolder comes from <code>_pick_version()</code>: it collects every <code>version:</code> signal on the file and takes the <strong>last</strong> one. Why last? Because mod file names often look like <code>jei-15.2.1-1.20.1.jar</code> — the mod's own version comes first and the game version comes last, so the last match is the reliable one.</p>
+<hr>
+<h1 id="part-7-stage-6-filters-and-safety">Part 7 — Stage 6: filters and safety<a class="anchor" href="#part-7-stage-6-filters-and-safety" aria-label="link">#</a></h1>
+<p>A real Downloads folder has traps. Three guards keep you out of trouble.</p>
+<h2 id="71-ignore-half-finished-downloads">7.1 Ignore half-finished downloads<a class="anchor" href="#71-ignore-half-finished-downloads" aria-label="link">#</a></h2>
+<p>Browsers save a file as something like <code>movie.mp4.crdownload</code> while it is downloading, then rename it when done. If we move the partial file, we break the download.</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">PARTIAL</span> <span class="o">=</span> <span class="p">{</span><span class="s2">".part"</span><span class="p">,</span> <span class="s2">".crdownload"</span><span class="p">,</span> <span class="s2">".tmp"</span><span class="p">,</span> <span class="s2">".download"</span><span class="p">}</span>
+
+<span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">PARTIAL</span><span class="p">:</span>
+    <span class="k">continue</span>
+</pre></div>
+<h2 id="72-ignore-files-written-seconds-ago">7.2 Ignore files written seconds ago<a class="anchor" href="#72-ignore-files-written-seconds-ago" aria-label="link">#</a></h2>
+<p>Sometimes the ending is already right but the file is still being written. We check how long ago it was changed:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="n">age</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">item</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span>      <span class="c1"># mtime = time last modified</span>
+<span class="k">if</span> <span class="n">age</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>                                   <span class="c1"># changed less than 5s ago</span>
+    <span class="k">continue</span>
+</pre></div>
+<p><code>item.stat().st_mtime</code> is the last-modified time as a number (seconds). Subtract it from the current time and you get the age in seconds.</p>
+<h2 id="73-never-overwrite">7.3 Never overwrite<a class="anchor" href="#73-never-overwrite" aria-label="link">#</a></h2>
+<p>If <code>Downloads/Images/photo.jpg</code> already exists and a <em>different</em> <code>photo.jpg</code> arrives, we must not silently destroy the first one.</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">def</span><span class="w"> </span><span class="nf">free_name</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="n">destination</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">/</span> <span class="n">filename</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">destination</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">destination</span>
+
+    <span class="n">stem</span> <span class="o">=</span> <span class="n">destination</span><span class="o">.</span><span class="n">stem</span>          <span class="c1"># "photo"</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="n">destination</span><span class="o">.</span><span class="n">suffix</span>      <span class="c1"># ".jpg"</span>
+    <span class="n">number</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stem</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">number</span><span class="si">}</span><span class="s2">)</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">candidate</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">candidate</span>
+        <span class="n">number</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div>
+<p>Now the second one becomes <code>photo (1).jpg</code>, then <code>photo (2).jpg</code>.</p>
+<blockquote><p><strong><code>while True:</code> with a <code>return</code> inside</strong> is the standard "search until you find it" pattern. It would loop forever without the <code>return</code> — that is what breaks the loop.</p></blockquote>
+<p><code>f"{stem} ({number}){suffix}"</code> is an <strong>f-string</strong>: text with <code>{}</code> holes that get filled in. <code>f"a{1+1}b"</code> gives <code>a2b</code>. You will use these constantly.</p>
+<p>In the finished project these three guards are collected into one function, <code>looks_like_download()</code> — it returns <code>(ok, reason)</code> so the caller knows <em>why</em> something was left alone and can print it. The renaming helper is <code>unique_destination()</code>, and the function that walks the folder and analyses each file is <code>read_folder()</code>.</p>
+<hr>
+<h1 id="part-8-stage-7-letting-the-user-choose">Part 8 — Stage 7: letting the user choose<a class="anchor" href="#part-8-stage-7-letting-the-user-choose" aria-label="link">#</a></h1>
+<p>Editing the code to change folders is silly. Real programs take <strong>arguments</strong>.</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"Organize downloads"</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">"?"</span><span class="p">,</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s2">"folder to organize (default: Downloads)"</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--dry-run"</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">"store_true"</span><span class="p">,</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s2">"show what would happen, change nothing"</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">"--watch"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">"SECONDS"</span><span class="p">,</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s2">"re-scan every SECONDS seconds"</span><span class="p">)</span>
+<span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"source:"</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"dry run?"</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"watch every:"</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">watch</span><span class="p">)</span>
+</pre></div>
+<p>Now:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">python</span> <span class="n">stage7</span><span class="p">.</span><span class="n">py</span>
+<span class="n">python</span> <span class="n">stage7</span><span class="p">.</span><span class="n">py</span> <span class="n">C</span><span class="p">:/</span><span class="n">some</span><span class="p">/</span><span class="n">folder</span>
+<span class="n">python</span> <span class="n">stage7</span><span class="p">.</span><span class="n">py</span> <span class="p">-</span><span class="n">-dry-run</span>
+<span class="n">python</span> <span class="n">stage7</span><span class="p">.</span><span class="n">py</span> <span class="p">-</span><span class="n">-watch</span> <span class="n">30</span>
+</pre></div>
+<ul><li><code>nargs="?"</code> means the argument is optional.</li><li><code>action="store_true"</code> makes <code>--dry-run</code> a simple on/off flag that becomes <code>True</code> when present.</li><li><code>type=int</code> converts the value after <code>--watch</code> from text to a number.</li></ul>
+<p><strong><code>--dry-run</code> is the most important flag in this whole app.</strong> It means "tell me what you <em>would</em> do, but do not touch anything". Any program that moves or deletes files should have one. It lets you find out it is about to do something dumb <em>before</em> it does.</p>
+<p>In the real project, <code>--dry-run</code>, <code>--watch</code>, <code>--suggest</code>, <code>--accept</code> and <code>--undo</code> all work like this. Look at <code>main()</code> in <code>organizer.py</code>.</p>
+<hr>
+<h1 id="part-9-stage-8-settings-that-survive-a-restart">Part 9 — Stage 8: settings that survive a restart<a class="anchor" href="#part-9-stage-8-settings-that-survive-a-restart" aria-label="link">#</a></h1>
+<p>If the user picks a folder, that choice should stick. We save settings in a JSON file.</p>
+<p><strong>JSON</strong> is a way to store data as text — lists, text, numbers and nested dictionaries. Python can turn its dictionaries into JSON and back:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">CONFIG_FILE</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"config.json"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">load_settings</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">CONFIG_FILE</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"rules"</span><span class="p">:</span> <span class="p">[]}</span>       <span class="c1"># defaults</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">save_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
+    <span class="n">CONFIG_FILE</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+</pre></div>
+<ul><li><code>Path(__file__)</code> is the path of <em>this</em> script. <code>with_name("config.json")</code> swaps the file name, so <code>config.json</code> always sits next to the script no matter where you run it from.</li><li><code>json.loads(text)</code> turns text into a Python dictionary. <code>json.dumps(data)</code> does the reverse. <code>indent=2</code> makes the saved file readable.</li><li><code>encoding="utf-8"</code> makes sure special characters work.</li></ul>
+<blockquote><p><strong><code>with_name</code> vs <code>parent</code>:</strong> <code>path.parent</code> is the folder, <code>path.with_name("x")</code> replaces the last part. Knowing these two saves a lot of string juggling.</p></blockquote>
+<p>One extra trick from the real project: when the app runs as a built <code>.exe</code>, saving next to the script is impossible (the script is packed inside the exe), so we save to <code>%APPDATA%\DownloadOrganizer</code> instead. That is what <code>data_dir()</code> in <code>config.py</code> handles.</p>
+<hr>
+<h1 id="part-10-stage-9-watch-mode">Part 10 — Stage 9: watch mode<a class="anchor" href="#part-10-stage-9-watch-mode" aria-label="link">#</a></h1>
+<p>"Watch mode" means: keep running, check the folder every so often, sort whatever appears. The core is a loop with a sleep:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="n">sort_once</span><span class="p">()</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>          <span class="c1"># wait 30 seconds, then do it again</span>
+</pre></div>
+<p>That is genuinely it — but we add one nicety: letting <strong>Ctrl+C</strong> stop it cleanly instead of dumping an error.</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">try</span><span class="p">:</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">sort_once</span><span class="p">()</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>          <span class="c1"># raised when you press Ctrl+C</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Stopped."</span><span class="p">)</span>
+</pre></div>
+<blockquote><p><strong>Careful:</strong> <code>time.sleep()</code> pauses the program for that many seconds. If you set a tiny number like <code>0.01</code>, the loop will run thousands of times a second and hammer your disk. 30 seconds is sensible.</p></blockquote>
+<p>In the real app, watch mode lives in the command line (<code>--watch 30</code>) and as the <strong>Start watching</strong> button in the window. The button does the waiting on a <em>background thread</em> so the window keeps responding while it waits — but that is a bonus topic, not something you need yet.</p>
+<hr>
+<h1 id="part-11-stage-10-undo">Part 11 — Stage 10: undo<a class="anchor" href="#part-11-stage-10-undo" aria-label="link">#</a></h1>
+<p>An undo button sounds magic. It is not. It is just a <strong>list of what we did</strong>.</p>
+<p>Before moving each file, we write down two things: where it came from and where it went. Save that list to a file. To undo, read the list backwards and swap the two paths.</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">HISTORY</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"history.json"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">remember</span><span class="p">(</span><span class="n">moves</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""moves is a list of (from_path, to_path)."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">moves</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">runs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">HISTORY</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">runs</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">HISTORY</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="n">runs</span><span class="o">.</span><span class="n">append</span><span class="p">([[</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)]</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">moves</span><span class="p">])</span>
+    <span class="n">HISTORY</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">runs</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">undo_last</span><span class="p">():</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">HISTORY</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">runs</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">HISTORY</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">runs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">last</span> <span class="o">=</span> <span class="n">runs</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>                 <span class="c1"># take off the most recent run</span>
+    <span class="n">restored</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">old_path</span><span class="p">,</span> <span class="n">new_path</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">last</span><span class="p">):</span>     <span class="c1"># backwards, to be safe</span>
+        <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">old_path</span><span class="p">),</span> <span class="n">Path</span><span class="p">(</span><span class="n">new_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">new</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>          <span class="c1"># "replace" MOVES new back onto old</span>
+            <span class="n">restored</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">HISTORY</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">runs</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">restored</span>
+</pre></div>
+<ul><li><code>runs.pop()</code> removes and returns the last item of a list.</li><li><code>reversed(last)</code> walks the list from the end. We undo in reverse order so everything unwinds cleanly.</li><li><code>Path.replace(target)</code> moves a file, overwriting the target if it exists. That is exactly what "put it back" means.</li></ul>
+<blockquote><p><strong>Why keep a list of runs, not just one?</strong> So you can undo the last run, and if you change your mind, undo the one before. The real app keeps the last 20 runs and trims the rest so the file cannot grow forever.</p></blockquote>
+<p>This is <code>history.py</code> in the real project. The window's <strong>Undo last run</strong> button just calls <code>history.undo_last()</code>.</p>
+<p>Undo also tidies up after itself. When files move back out of <code>Images/</code>, that folder is now empty and pointless, so it gets removed — but only if it is genuinely empty, and never above the folder you started in:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">def</span><span class="w"> </span><span class="nf">_prune_empty_parents</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">stop_at</span><span class="p">):</span>
+    <span class="k">while</span> <span class="n">folder</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stop_at</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">folder</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">folder</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()):</span>
+            <span class="k">break</span>                       <span class="c1"># not empty -&gt; stop</span>
+        <span class="n">folder</span><span class="o">.</span><span class="n">rmdir</span><span class="p">()</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">folder</span><span class="o">.</span><span class="n">parent</span>          <span class="c1"># climb up and try the next one</span>
+</pre></div>
+<p><code>any(folder.iterdir())</code> is True if the folder has even one thing in it. The <code>stop_at</code> set holds the folders the files came from, so we can never delete your actual Downloads folder by mistake. And <code>rmdir()</code> only works on empty folders — a second safety net, because it refuses to delete anything with files inside.</p>
+<hr>
+<h1 id="part-12-stage-11-the-desktop-window">Part 12 — Stage 11: the desktop window<a class="anchor" href="#part-12-stage-11-the-desktop-window" aria-label="link">#</a></h1>
+<p>Now the bit you asked for: a real Windows app with clickable tabs. We use <strong>tkinter</strong> — a window toolkit that comes <em>built into</em> Python, so there is nothing to install.</p>
+<p>The smallest possible window:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="kn">import</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tk</span>
+
+<span class="n">root</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">()</span>                      <span class="c1"># the main window</span>
+<span class="n">root</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">"My App"</span><span class="p">)</span>
+<span class="n">root</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="s2">"400x300"</span><span class="p">)</span>            <span class="c1"># width x height</span>
+
+<span class="n">label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Hello"</span><span class="p">)</span>
+<span class="n">label</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>                        <span class="c1"># place it in the window</span>
+
+<span class="n">button</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Click me"</span><span class="p">,</span>
+                   <span class="n">command</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">"clicked"</span><span class="p">))</span>
+<span class="n">button</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+
+<span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>                     <span class="c1"># keep the window open</span>
+</pre></div>
+<p>Run it and a real window appears.</p>
+<h2 id="121-the-parts-explained">12.1 The parts explained<a class="anchor" href="#121-the-parts-explained" aria-label="link">#</a></h2>
+<ul><li><code>tk.Tk()</code> creates the window.</li><li><code>tk.Label</code>, <code>tk.Button</code>, <code>tk.Entry</code> (a text box) are called <strong>widgets</strong>.</li><li><code>.pack()</code> puts a widget into the window. (<code>.grid()</code> places things in a table instead — the real app mixes both.)</li><li><code>command=...</code> is the function to run when the button is clicked.</li><li><code>lambda: print("clicked")</code> is a tiny throwaway function. You need it whenever you just want "do this little thing" without a full <code>def</code>.</li><li><code>root.mainloop()</code> starts the window listening for clicks. <strong>Everything before mainloop sets up the window; mainloop is what actually shows it.</strong></li></ul>
+<h2 id="122-tabs">12.2 Tabs<a class="anchor" href="#122-tabs" aria-label="link">#</a></h2>
+<p>A tabbed window is a <code>Notebook</code>:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="kn">from</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="kn">import</span> <span class="n">ttk</span>
+
+<span class="n">notebook</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Notebook</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="n">notebook</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">fill</span><span class="o">=</span><span class="s2">"both"</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">tab1</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="n">notebook</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">notebook</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tab1</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Folders"</span><span class="p">)</span>
+
+<span class="n">tab2</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="n">notebook</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">notebook</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tab2</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Run"</span><span class="p">)</span>
+</pre></div>
+<p>Each tab is a <code>Frame</code> (a container) that you then put widgets into.</p>
+<h2 id="123-reading-a-text-box">12.3 Reading a text box<a class="anchor" href="#123-reading-a-text-box" aria-label="link">#</a></h2>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">text_var</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">StringVar</span><span class="p">()</span>               <span class="c1"># a value the window watches</span>
+<span class="n">entry</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">textvariable</span><span class="o">=</span><span class="n">text_var</span><span class="p">)</span>
+<span class="n">entry</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+
+<span class="c1"># later, when a button is clicked:</span>
+<span class="n">chosen</span> <span class="o">=</span> <span class="n">text_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>                 <span class="c1"># read what the user typed</span>
+<span class="n">text_var</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"new text"</span><span class="p">)</span>                <span class="c1"># put text in</span>
+</pre></div>
+<p><code>StringVar</code> is a "variable" that belongs to the window, so widgets can show it and keep it updated automatically.</p>
+<h2 id="124-the-button-that-actually-runs-the-app">12.4 The button that actually runs the app<a class="anchor" href="#124-the-button-that-actually-runs-the-app" aria-label="link">#</a></h2>
+<p>The window does not re-implement anything. It <strong>calls the same functions the command line uses</strong>:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">def</span><span class="w"> </span><span class="nf">organize_clicked</span><span class="p">():</span>
+    <span class="n">moves</span><span class="p">,</span> <span class="n">skipped</span> <span class="o">=</span> <span class="n">plan</span><span class="p">(</span><span class="n">source_folder</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>   <span class="c1"># from organizer.py</span>
+    <span class="n">apply_moves</span><span class="p">(</span><span class="n">moves</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+
+<span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">tab2</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Organize now"</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">organize_clicked</span><span class="p">)</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+</pre></div>
+<blockquote><p><strong>The lesson of this whole stage:</strong> separate "the thinking" (organizer.py) from "the buttons" (gui.py). One brain, two mouths. If you ever want a web version too, you add another mouth — you never touch the brain. That is why the project is split into several small files instead of one giant one.</p></blockquote>
+<p>Open <code>gui.py</code> and read it with these ideas in mind. It is long, but you will now recognise every piece: tabs, labels, buttons, text boxes, and calls into <code>organizer.py</code> and <code>history.py</code>.</p>
+<p>One detail worth knowing: the <strong>Run</strong> tab does its work on a <em>background thread</em> so the window does not freeze while it scans. A thread is like a second worker doing a job while the main one keeps the window responsive. Look for <code>threading.Thread(...)</code> in <code>gui.py</code>. You do not need to master threads yet — just know that is what it is for.</p>
+<h3 id="125-the-finished-windows-shape">12.5 The finished window's shape<a class="anchor" href="#125-the-finished-windows-shape" aria-label="link">#</a></h3>
+<p><code>gui.py</code> is one big <code>class App</code>. A <strong>class</strong> is a bundle of data and functions that belong together — here, "the window and everything it can do". You create it once with <code>App(root)</code>, and <code>__init__</code> builds everything:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span>          <span class="c1"># self.* is the class's own memory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>  <span class="c1"># settings, loaded once</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">watching</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_header</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_tabs</span><span class="p">()</span>        <span class="c1"># creates the four tabs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_all</span><span class="p">()</span>       <span class="c1"># fills the boxes with saved values</span>
+</pre></div>
+<p><code>self</code> is how a class refers to itself. <code>self.cfg</code> means "my cfg". Whenever you see <code>self.</code> in <code>gui.py</code>, the window is remembering something.</p>
+<p>The four tabs are made by four functions — <code>_tab_folders</code>, <code>_tab_categories</code>, <code>_tab_patterns</code>, <code>_tab_run</code> — each creating its own widgets. The leading <code>_</code> is just a convention meaning "internal helper".</p>
+<h3 id="126-tables-lists-and-number-boxes">12.6 Tables, lists and number boxes<a class="anchor" href="#126-tables-lists-and-number-boxes" aria-label="link">#</a></h3>
+<p>Three more widgets the finished app uses:</p>
+<p><strong>A table</strong> for the pattern list is a <code>Treeview</code>:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">tree</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Treeview</span><span class="p">(</span><span class="n">tab</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="s2">"signal"</span><span class="p">),</span> <span class="n">show</span><span class="o">=</span><span class="s2">"headings"</span><span class="p">)</span>
+<span class="n">tree</span><span class="o">.</span><span class="n">heading</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">"Files"</span><span class="p">)</span>
+<span class="n">tree</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">tree</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">"inner:factorio-mod"</span><span class="p">))</span>
+</pre></div>
+<p><strong>A plain list</strong> (for the accepted rules) is a <code>Listbox</code>:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">box</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Listbox</span><span class="p">(</span><span class="n">tab</span><span class="p">)</span>
+<span class="n">box</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">"end"</span><span class="p">,</span> <span class="s2">"inner:factorio-mod  -&gt;  Factorio Mods"</span><span class="p">)</span>
+<span class="n">selected</span> <span class="o">=</span> <span class="n">box</span><span class="o">.</span><span class="n">curselection</span><span class="p">()</span>      <span class="c1"># which line is highlighted</span>
+</pre></div>
+<p><strong>A number box with little up/down arrows</strong> is a <code>Spinbox</code>:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">tk</span><span class="o">.</span><span class="n">Spinbox</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">from_</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">to</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">textvariable</span><span class="o">=</span><span class="n">age_var</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+</pre></div>
+<p>Finding the highlighted row back is how the <strong>Accept selected pattern</strong> and <strong>Remove selected rule</strong> buttons know what you clicked.</p>
+<h3 id="127-running-slow-work-without-freezing-the-window">12.7 Running slow work without freezing the window<a class="anchor" href="#127-running-slow-work-without-freezing-the-window" aria-label="link">#</a></h3>
+<p>Scanning a big folder takes a few seconds. If you did it inside the click function, the window would freeze solid until it finished. So the finished app runs the work on a <strong>thread</strong> and hands the result back afterwards:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">def</span><span class="w"> </span><span class="nf">find_patterns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">work</span><span class="p">():</span>                              <span class="c1"># runs on the background thread</span>
+        <span class="n">files</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">organizer</span><span class="o">.</span><span class="n">read_folder</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="n">patterns</span><span class="o">.</span><span class="n">suggest</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">after</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_show_patterns</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>   <span class="c1"># back to the UI</span>
+
+    <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">work</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+<p>Two things make this safe:</p>
+<ul><li><code>threading.Thread(target=work).start()</code> runs <code>work</code> in the background. <code>daemon=True</code> means the thread dies if you close the window.</li><li><code>self.root.after(0, ...)</code> means "when convenient, run this back on the main window thread". <strong>Never touch widgets from a background thread</strong> — that is the one rule of threads, and <code>after</code> is the safe handover.</li></ul>
+<p>That is exactly what <code>find_patterns()</code>, <code>run()</code> and <code>_watch_loop()</code> do in <code>gui.py</code>, and why the window stays clickable while it scans.</p>
+<hr>
+<h1 id="part-13-stage-12-turning-it-into-a-windows-exe">Part 13 — Stage 12: turning it into a Windows .exe<a class="anchor" href="#part-13-stage-12-turning-it-into-a-windows-exe" aria-label="link">#</a></h1>
+<p>Right now you run the app with <code>python gui.py</code>. That needs Python installed. An <strong>.exe</strong> is a single file anyone can double-click. We use <strong>PyInstaller</strong>.</p>
+<h2 id="131-install-it">13.1 Install it<a class="anchor" href="#131-install-it" aria-label="link">#</a></h2>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">python</span> <span class="n">-m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">pyinstaller</span>
+</pre></div>
+<p><code>pip</code> is Python's app store. <code>-m pip</code> means "run the pip module".</p>
+<h2 id="132-build">13.2 Build<a class="anchor" href="#132-build" aria-label="link">#</a></h2>
+<p>In the project folder:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">python</span> <span class="n">-m</span> <span class="n">PyInstaller</span> <span class="p">-</span><span class="n">-onefile</span> <span class="p">-</span><span class="n">-windowed</span> <span class="p">-</span><span class="n">-name</span> <span class="n">DownloadOrganizer</span> <span class="n">run</span><span class="p">.</span><span class="n">py</span>
+</pre></div>
+<p>The options:</p>
+<ul><li><code>--onefile</code> — pack everything into a single <code>.exe</code>.</li><li><code>--windowed</code> — no black console window behind the app (right for a GUI).</li><li><code>--name DownloadOrganizer</code> — what the file will be called.</li><li><code>run.py</code> — the entry point; it just opens the window.</li></ul>
+<p>After a minute or two you get:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">text</span><button class="cb-copy" type="button">copy</button></div><pre>dist/DownloadOrganizer.exe     &lt;-- this is your app
+</pre></div>
+<p>Double-click it. It opens like any Windows program. Copy it anywhere, or give it to a friend — that one file is the whole thing.</p>
+<h2 id="133-what-pyinstaller-actually-does">13.3 What PyInstaller actually does<a class="anchor" href="#133-what-pyinstaller-actually-does" aria-label="link">#</a></h2>
+<p>It looks at your code, finds every tool it uses (our imports, plus a copy of Python itself), and glues them all into one big file. That is why the <code>.exe</code> is about 13 MB — it is carrying Python around with it.</p>
+<blockquote><p><strong>A warning about antivirus and SmartScreen.</strong> Windows sometimes shows "unknown publisher" for a new <code>.exe</code>, because nobody paid for a signing certificate. That is normal for homemade apps. Click "More info" → "Run anyway".</p></blockquote>
+<h2 id="134-why-settings-move-to-appdata">13.4 Why settings move to %APPDATA%<a class="anchor" href="#134-why-settings-move-to-appdata" aria-label="link">#</a></h2>
+<p>When <code>run.py</code> is packed into an <code>.exe</code>, there is no source folder on disk to save <code>config.json</code> into. So the app saves your settings to <code>%APPDATA%\DownloadOrganizer</code> instead. In Explorer you can paste <code>%APPDATA%\DownloadOrganizer</code> into the address bar to see it. This is how normal Windows apps behave, and <code>config.py</code> checks for it with:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">python</span><button class="cb-copy" type="button">copy</button></div><pre><span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="s2">"frozen"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>     <span class="c1"># "frozen" = running as a built exe</span>
+    <span class="o">...</span><span class="n">use</span> <span class="o">%</span><span class="n">APPDATA</span><span class="o">%...</span>
+</pre></div>
+<hr>
+<h1 id="part-14-git-and-github-explained-properly">Part 14 — Git and GitHub, explained properly<a class="anchor" href="#part-14-git-and-github-explained-properly" aria-label="link">#</a></h1>
+<p>This trips up every beginner, so let us go slowly. Two different things, often confused:</p>
+<ul><li><strong>Git</strong> — a program on your computer that saves versions of your work. Like an unlimited "save game" history you can jump back to.</li><li><strong>GitHub</strong> — a website that stores a copy of your Git projects online, so you can back them up, share them, and show them to employers.</li></ul>
+<p>Git = the tool. GitHub = the place. You can use Git without GitHub.</p>
+<h2 id="141-why-bother">14.1 Why bother?<a class="anchor" href="#141-why-bother" aria-label="link">#</a></h2>
+<ul><li>A safety net: made a mess? Go back to how it was an hour ago.</li><li>A portfolio: employers look at GitHub. "Here is code I wrote and understand" beats an empty CV.</li><li>Backup: your laptop dies, your code is safe online.</li></ul>
+<h2 id="142-install-git">14.2 Install Git<a class="anchor" href="#142-install-git" aria-label="link">#</a></h2>
+<p>Download from <a href="https://git-scm.com/download/win" target="_blank" rel="noopener">https://git-scm.com/download/win</a>. Install with the defaults. Check it:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">git</span> <span class="p">-</span><span class="n">-version</span>
+</pre></div>
+<h2 id="143-tell-git-who-you-are-once">14.3 Tell Git who you are (once)<a class="anchor" href="#143-tell-git-who-you-are-once" aria-label="link">#</a></h2>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">git</span> <span class="n">config</span> <span class="p">-</span><span class="n">-global</span> <span class="n">user</span><span class="p">.</span><span class="n">name</span> <span class="s2">"Muneeb Khan"</span>
+<span class="n">git</span> <span class="n">config</span> <span class="p">-</span><span class="n">-global</span> <span class="n">user</span><span class="p">.</span><span class="n">email</span> <span class="s2">"you@example.com"</span>
+</pre></div>
+<p>Use the same email you will use on GitHub. This name gets attached to every "save" you make.</p>
+<h2 id="144-the-three-step-idea-working-staged-saved">14.4 The three-step idea: working → staged → saved<a class="anchor" href="#144-the-three-step-idea-working-staged-saved" aria-label="link">#</a></h2>
+<p>Git thinks in three places:</p>
+<ol><li><strong>Working folder</strong> — the actual files you edit.</li><li><strong>Staging area</strong> — files you have picked to include in the next save.</li><li><strong>Repository / commit history</strong> — your saved snapshots.</li></ol>
+<p>A <strong>commit</strong> is one snapshot, with a message describing what changed.</p>
+<h2 id="145-start-tracking-your-project">14.5 Start tracking your project<a class="anchor" href="#145-start-tracking-your-project" aria-label="link">#</a></h2>
+<p>In your project folder:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">git</span> <span class="n">init</span>
+</pre></div>
+<p>This creates a hidden <code>.git</code> folder — that is Git's memory. Do not delete it.</p>
+<p>Now add a <code>.gitignore</code> file. It lists things Git should <strong>not</strong> save (junk you do not want online):</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">text</span><button class="cb-copy" type="button">copy</button></div><pre>__pycache__/
+build/
+config.json
+history.json
+demo_downloads/
+</pre></div>
+<blockquote><p><strong>Why ignore <code>config.json</code>?</strong> It holds <em>your</em> personal settings and folder paths. <code>__pycache__</code> and <code>build/</code> are generated junk that rebuilds itself. You never commit those.</p></blockquote>
+<h2 id="146-save-your-first-snapshot">14.6 Save your first snapshot<a class="anchor" href="#146-save-your-first-snapshot" aria-label="link">#</a></h2>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">git</span> <span class="n">add</span> <span class="p">.</span>
+<span class="n">git</span> <span class="n">commit</span> <span class="n">-m</span> <span class="s2">"First version of the download organizer"</span>
+</pre></div>
+<ul><li><code>git add .</code> stages everything in the folder (the <code>.</code> means "here").</li><li><code>git commit -m "message"</code> saves the snapshot with that message. Write messages that describe <em>what changed</em>, e.g. <code>"Add undo support"</code>.</li></ul>
+<p>Check the state any time:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">git</span> <span class="n">status</span>      <span class="c"># what has changed since the last save</span>
+<span class="n">git</span> <span class="n">log</span> <span class="p">-</span><span class="n">-oneline</span>   <span class="c"># the list of your commits</span>
+</pre></div>
+<h2 id="147-put-it-on-github">14.7 Put it on GitHub<a class="anchor" href="#147-put-it-on-github" aria-label="link">#</a></h2>
+<ol><li>Make a free account at <a href="https://github.com" target="_blank" rel="noopener">https://github.com</a>.</li><li>Click <strong>New repository</strong>. Name it <code>download-organizer</code>. <strong>Do not</strong> add a README or .gitignore — you already have those. Click Create.</li><li>GitHub shows you a URL like <code>https://github.com/yourname/download-organizer.git</code>.</li><li>Connect your local project to it and push:</li></ol>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">git</span> <span class="n">remote</span> <span class="n">add</span> <span class="n">origin</span> <span class="n">https</span><span class="p">://</span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="p">/</span><span class="n">yourname</span><span class="p">/</span><span class="n">download-organizer</span><span class="p">.</span><span class="n">git</span>
+<span class="n">git</span> <span class="n">branch</span> <span class="n">-M</span> <span class="n">main</span>
+<span class="n">git</span> <span class="n">push</span> <span class="n">-u</span> <span class="n">origin</span> <span class="n">main</span>
+</pre></div>
+<ul><li><code>git remote add origin &lt;url&gt;</code> tells Git where the online copy lives. <code>origin</code> is just a nickname for that URL.</li><li><code>git branch -M main</code> renames your branch to <code>main</code> (GitHub's default name).</li><li><code>git push -u origin main</code> uploads your commits. <code>-u</code> remembers the pairing, so after this you can just type <code>git push</code>.</li></ul>
+<p>Refresh the GitHub page. Your files are there. That is your first repo.</p>
+<h2 id="148-the-everyday-rhythm">14.8 The everyday rhythm<a class="anchor" href="#148-the-everyday-rhythm" aria-label="link">#</a></h2>
+<p>After the first setup, the loop is always the same three commands:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">git</span> <span class="n">add</span> <span class="p">.</span>
+<span class="n">git</span> <span class="n">commit</span> <span class="n">-m</span> <span class="s2">"Describe what you changed"</span>
+<span class="n">git</span> <span class="n">push</span>
+</pre></div>
+<p>Do this every time you finish a chunk of work. Small, frequent commits are better than one giant one.</p>
+<h2 id="149-logging-in-tokens">14.9 Logging in / tokens<a class="anchor" href="#149-logging-in-tokens" aria-label="link">#</a></h2>
+<p>GitHub no longer accepts your normal password for <code>git push</code>. When it asks, you need a <strong>Personal Access Token</strong>:</p>
+<ol><li>On GitHub: your picture → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token.</li><li>Give it a name, tick <strong>repo</strong>, generate, and <strong>copy the token</strong>.</li><li>When Git asks for a password, paste the token instead.</li></ol>
+<p>Save it once and Git remembers it. (An alternative is an SSH key, which is neater but a longer setup — the token route is fine to start.)</p>
+<h2 id="1410-two-bonus-git-skills">14.10 Two bonus Git skills<a class="anchor" href="#1410-two-bonus-git-skills" aria-label="link">#</a></h2>
+<p><strong>Cloning</strong> means downloading someone else's project:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">://</span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="p">/</span><span class="n">someone</span><span class="p">/</span><span class="n">their-project</span><span class="p">.</span><span class="n">git</span>
+</pre></div>
+<p><strong>Undoing a bad change</strong> — if you edited files and want them back as they were at your last commit:</p>
+<div class="cb"><div class="cb-head"><span class="cb-lang">powershell</span><button class="cb-copy" type="button">copy</button></div><pre><span class="n">git</span> <span class="n">restore</span> <span class="p">.</span>
+</pre></div>
+<p>Careful: that throws away your uncommitted edits. It is your safety net, but it is a one-way door for anything you never committed.</p>
+<blockquote><p><strong>Plain-English summary.</strong> Git saves snapshots of your folder locally. <code>git add .</code> picks what to include, <code>git commit -m "..."</code> saves the snapshot, <code>git push</code> uploads it to GitHub. That is 90% of daily Git.</p></blockquote>
+<hr>
+<h1 id="part-15-when-things-go-wrong">Part 15 — When things go wrong<a class="anchor" href="#part-15-when-things-go-wrong" aria-label="link">#</a></h1>
+<p><strong><code>python is not recognized</code></strong> Python is not on your PATH. Re-run the installer and tick "Add python.exe to PATH".</p>
+<p><strong><code>ModuleNotFoundError: No module named 'tkinter'</code></strong> Rare on Windows. Re-run the Python installer and make sure "tcl/tk and IDLE" is ticked.</p>
+<p><strong><code>PermissionError</code> when moving a file</strong> The file is open in another program (or still downloading). Close it and retry. The app also skips recently-changed files for this reason.</p>
+<p><strong>A file went to the wrong folder</strong> That is not a bug — it is feedback. Add or fix a rule in the Patterns tab, or add the missing extension to the right category. The app is meant to be taught.</p>
+<p><strong>The .exe shows "Windows protected your PC"</strong> Normal for unsigned homemade programs. "More info" → "Run anyway".</p>
+<p><strong><code>fatal: not a git repository</code></strong> You are running Git in the wrong folder. <code>cd</code> into your project folder first.</p>
+<p><strong>I messed up my files</strong> Run the Undo button (or <code>python organizer.py --undo</code>). And in future: always <code>--dry-run</code> first.</p>
+<hr>
+<h2 id="you-built-it">You built it<a class="anchor" href="#you-built-it" aria-label="link">#</a></h2>
+<p>Take a second to notice what you now know:</p>
+<ul><li>Reading a file's <strong>bytes</strong> to identify its real type.</li><li>Reading its <strong>text</strong> to guess what kind of text it is.</li><li>Turning measurements into <strong>signals</strong>, and signals into <strong>patterns</strong>.</li><li>Letting a <em>user</em> confirm a pattern, and remembering it as a <strong>rule</strong>.</li><li>Guarding against half-finished and duplicate files.</li><li>The difference between a <strong>dry run</strong> and a real run.</li><li>Two front ends — command line and window — over one <strong>engine</strong>.</li><li>Packaging a Python program into a Windows <strong>.exe</strong>.</li><li>Saving versions of your work with <strong>Git</strong>, and publishing with <strong>GitHub</strong>.</li></ul>
+<p>That is a real chunk of practical programming. The specific app matters less than the habits: <strong>build the smallest thing that works, add one idea at a time, and prove each step before moving on.</strong></p>
+<hr>
+<h1 id="part-16-the-complete-file-map-answer-key">Part 16 — The complete file map (answer key)<a class="anchor" href="#part-16-the-complete-file-map-answer-key" aria-label="link">#</a></h1>
+<p>You built the app. Here is where each idea ended up, and what the finished code calls it. Search the real files for these names whenever you lose your way.</p>
+<table><thead><tr><th>You built (tutorial)</th><th>Finished file</th><th>What it is</th></tr></thead><tbody><tr><td><code>EXTENSIONS</code> dict</td><td><code>categories</code> in <code>config.py</code></td><td>extension -&gt; folder</td></tr><tr><td><code>sort_folder()</code></td><td><code>plan()</code> + <code>apply_moves()</code></td><td>decide, then move</td></tr><tr><td><code>sniff_type()</code></td><td><code>magic_type()</code> in <code>patterns.py</code></td><td>bytes -&gt; real file type</td></tr><tr><td><code>sniff_text()</code></td><td><code>_looks_like_text()</code> in <code>patterns.py</code></td><td>is this text at all?</td></tr><tr><td><code>analyze()</code></td><td><code>analyze()</code> in <code>patterns.py</code></td><td>all signals for one file</td></tr><tr><td><code>suggest()</code></td><td><code>suggest()</code> in <code>patterns.py</code></td><td>count signals, propose folders</td></tr><tr><td><code>friendly_name()</code></td><td><code>friendly_folder()</code> + <code>FRIENDLY_FOLDERS</code></td><td>signal -&gt; nice name</td></tr><tr><td><code>PARTIAL</code> set + age check</td><td><code>looks_like_download()</code></td><td>skip half-done files</td></tr><tr><td><code>free_name()</code></td><td><code>unique_destination()</code></td><td>never overwrite</td></tr><tr><td>reading the folder</td><td><code>read_folder()</code></td><td>walk + analyse</td></tr><tr><td><code>load_settings()</code> / <code>save_settings()</code></td><td><code>config.load()</code> / <code>config.save()</code></td><td>settings</td></tr><tr><td><code>remember()</code> / <code>undo_last()</code></td><td><code>history.record()</code> / <code>history.undo_last()</code></td><td>undo</td></tr><tr><td>the window</td><td><code>class App</code> in <code>gui.py</code></td><td>the four tabs</td></tr><tr><td>building the exe</td><td><code>run.py</code> + PyInstaller</td><td>the <code>.exe</code></td></tr></tbody></table>
+<p>Two files the tutorial did not walk through line by line, worth a read now that you understand the ideas:</p>
+<ul><li><strong><code>config.py</code></strong> — mostly the <code>DEFAULTS</code> dictionary and a <code>data_dir()</code> that switches between the project folder and <code>%APPDATA%</code> when running as an <code>.exe</code>.</li><li><strong><code>make_demo_files.py</code></strong> — builds <code>demo_downloads/</code>. It is short, and handy to copy when you want your own test files.</li></ul>
+<p>A handful of small plumbing helpers are worth knowing by name, since you will pass them every time you read the code:</p>
+<table><thead><tr><th>Helper</th><th>Where</th><th>Job</th></tr></thead><tbody><tr><td><code>config_path()</code> / <code>history_path()</code></td><td><code>config.py</code>, <code>history.py</code></td><td>where those files live</td></tr><tr><td><code>build_extension_lookup()</code></td><td><code>organizer.py</code></td><td>flips <code>{folder: [exts]}</code> into <code>{ext: folder}</code></td></tr><tr><td><code>resolve_source()</code> / <code>resolve_target()</code></td><td><code>organizer.py</code></td><td>turn settings into real paths</td></tr><tr><td><code>_print_moves()</code></td><td><code>organizer.py</code></td><td>the tidy grouped printout you see in the terminal</td></tr><tr><td><code>cleanup_empty_folders()</code></td><td><code>organizer.py</code></td><td>removes empty category folders after a real run</td></tr></tbody></table>
+<p>The tutorial deliberately uses simpler names than the finished code (a student version). That is normal — real projects get renamed and reorganised as they grow. What matters is that you can now open the real files and recognise every idea in them. That was the point of the whole exercise.</p>
+</article>
+<footer>Rendered from <code>TUTORIAL.md</code> on 2026-09-20 12:42 · offline, self-contained.</footer>
+</main>
+</div>
+<script>
+(function(){
+  var nav = document.getElementById('toc');
+  document.getElementById('menu').addEventListener('click', function(){
+    nav.classList.toggle('open');
+  });
+  document.querySelectorAll('nav.toc a').forEach(function(link){
+    link.addEventListener('click', function(){ nav.classList.remove('open'); });
+  });
+  // copy buttons
+  document.querySelectorAll('.cb-copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var pre = btn.closest('.cb').querySelector('pre');
+      var text = pre ? pre.innerText : '';
+      function done(){ btn.textContent = 'copied'; setTimeout(function(){
+        btn.textContent = 'copy'; }, 1200); }
+      if (navigator.clipboard && window.isSecureContext){
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else { fallback(); }
+      function fallback(){
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch(e){}
+        document.body.removeChild(ta);
+      }
+    });
+  });
+  // scroll-spy
+  var links = Array.prototype.slice.call(
+    document.querySelectorAll('nav.toc a'));
+  var map = {};
+  links.forEach(function(l){ map[l.getAttribute('href').slice(1)] = l; });
+  var heads = Array.prototype.slice.call(
+    document.querySelectorAll('article h1[id], article h2[id]'));
+  if (!heads.length || !('IntersectionObserver' in window)) return;
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (!entry.isIntersecting) return;
+      links.forEach(function(l){ l.classList.remove('active'); });
+      var link = map[entry.target.id];
+      if (link){ link.classList.add('active'); }
+    });
+  }, { rootMargin: '-10% 0px -75% 0px', threshold: 0 });
+  heads.forEach(function(h){ observer.observe(h); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Byte-compiled / cache
+__pycache__/
+*.pyc
+
+# PyInstaller build output (dist/ is kept so the .exe is shareable)
+build/
+*.spec
+
+# Local runtime files - these hold your settings and history
+config.json
+history.json
+
+# Test playground
+demo_downloads/
+
+# Editor / OS noise
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
